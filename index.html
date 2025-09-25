@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MM Plan Comparison</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+        }
+        .form-group label {
+            font-weight: 500;
+        }
+        .form-group select, .form-group input[type="text"] {
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            width: 100%;
+        }
+        .radio-group input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+
+    <div id="app-container" class="container mx-auto">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">MM Plan Comparison</h1>
+
+        <!-- Question Form Section -->
+        <div id="form-section" class="card">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-6">Your Details</h2>
+            <form id="quote-form" class="space-y-6">
+                
+                <!-- Age Selection -->
+                <div class="form-group">
+                    <label for="age" class="block text-gray-600 mb-1">Select your age group:</label>
+                    <select id="age" name="age" class="form-select focus:ring-blue-500 focus:border-blue-500 rounded-lg">
+                        <option value="" disabled selected>Select an age group</option>
+                        <option value="18-29">18-29</option>
+                        <option value="30-44">30-44</option>
+                        <option value="45-54">45-54</option>
+                        <option value="55-64">55-64</option>
+                    </select>
+                </div>
+
+                <!-- Spouse & Children Questions -->
+                <div class="form-group">
+                    <label class="block text-gray-600 mb-2">Do you have a spouse?</label>
+                    <div class="radio-group flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="spouse" value="yes" class="form-radio text-blue-600">
+                            <span class="ml-2 text-gray-700">Yes</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="spouse" value="no" checked class="form-radio text-blue-600">
+                            <span class="ml-2 text-gray-700">No</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="block text-gray-600 mb-2">Do you have children?</label>
+                    <div class="radio-group flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="children" value="yes" class="form-radio text-blue-600">
+                            <span class="ml-2 text-gray-700">Yes</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="children" value="no" checked class="form-radio text-blue-600">
+                            <span class="ml-2 text-gray-700">No</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Deductible Selection -->
+                <div class="form-group">
+                    <label for="deductible" class="block text-gray-600 mb-1">Select your desired deductible:</label>
+                    <select id="deductible" name="deductible" class="form-select focus:ring-blue-500 focus:border-blue-500 rounded-lg">
+                        <option value="" disabled selected>Select a deductible</option>
+                        <option value="1000">\$1,000</option>
+                        <option value="2500">\$2,500</option>
+                        <option value="3500">\$3,500</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    Analyze My Plan
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="card hidden">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Your Quote</h2>
+
+            <div class="mb-6 space-y-2">
+                <p class="text-sm text-gray-500">Your Selections:</p>
+                <p><span class="font-bold">Age Group:</span> <span id="summary-age"></span></p>
+                <p><span class="font-bold">Plan Type:</span> <span id="summary-plan-type"></span></p>
+                <p><span class="font-bold">Deductible:</span> <span id="summary-deductible"></span></p>
+            </div>
+            
+            <h3 class="text-xl font-semibold text-gray-700 mt-6 mb-4">Monthly Premiums</h3>
+            <div id="premiums-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Premiums will be dynamically inserted here -->
+            </div>
+
+            <h3 class="text-xl font-semibold text-gray-700 mt-8 mb-4">Summary of Benefits</h3>
+            <div id="benefits-container" class="space-y-4">
+                <!-- Benefits will be dynamically inserted here -->
+            </div>
+
+            <div class="mt-8 text-center">
+                <button id="start-over-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    Start Over
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const planData = {
+            rates: {
+                "1000": {
+                    "18-29": {
+                        "Employee": { "PHCS": 794.78, "CIGNA": 854.78 },
+                        "Employee + Spouse": { "PHCS": 1407.81, "CIGNA": 1487.81 },
+                        "Employee + Child(ren)": { "PHCS": 1295.61, "CIGNA": 1375.61 },
+                        "Family": { "PHCS": 2028.45, "CIGNA": 2128.45 }
+                    },
+                    "30-44": {
+                        "Employee": { "PHCS": 820.64, "CIGNA": 880.64 },
+                        "Employee + Spouse": { "PHCS": 1457.99, "CIGNA": 1537.99 },
+                        "Employee + Child(ren)": { "PHCS": 1341.23, "CIGNA": 1421.23 },
+                        "Family": { "PHCS": 2102.93, "CIGNA": 2202.93 }
+                    },
+                    "45-54": {
+                        "Employee": { "PHCS": 857.89, "CIGNA": 917.89 },
+                        "Employee + Spouse": { "PHCS": 1525.42, "CIGNA": 1605.42 },
+                        "Employee + Child(ren)": { "PHCS": 1403.03, "CIGNA": 1483.03 },
+                        "Family": { "PHCS": 2200.63, "CIGNA": 2300.63 }
+                    },
+                    "55-64": {
+                        "Employee": { "PHCS": 950.20, "CIGNA": 1010.20 },
+                        "Employee + Spouse": { "PHCS": 1709.34, "CIGNA": 1789.34 },
+                        "Employee + Child(ren)": { "PHCS": 1569.76, "CIGNA": 1649.76 },
+                        "Family": { "PHCS": 2476.05, "CIGNA": 2576.05 }
+                    }
+                },
+                "2500": {
+                    "18-29": {
+                        "Employee": { "PHCS": 689.25, "CIGNA": 749.25 },
+                        "Employee + Spouse": { "PHCS": 1203.11, "CIGNA": 1283.11 },
+                        "Employee + Child(ren)": { "PHCS": 1109.46, "CIGNA": 1189.46 },
+                        "Family": { "PHCS": 1724.53, "CIGNA": 1824.53 }
+                    },
+                    "30-44": {
+                        "Employee": { "PHCS": 710.89, "CIGNA": 770.89 },
+                        "Employee + Spouse": { "PHCS": 1245.09, "CIGNA": 1325.09 },
+                        "Employee + Child(ren)": { "PHCS": 1171.06, "CIGNA": 1251.06 },
+                        "Family": { "PHCS": 1786.86, "CIGNA": 1886.86 }
+                    },
+                    "45-54": {
+                        "Employee": { "PHCS": 742.88, "CIGNA": 802.88 },
+                        "Employee + Spouse": { "PHCS": 1302.31, "CIGNA": 1382.31 },
+                        "Employee + Child(ren)": { "PHCS": 1224.64, "CIGNA": 1304.64 },
+                        "Family": { "PHCS": 1869.41, "CIGNA": 1969.41 }
+                    },
+                    "55-64": {
+                        "Employee": { "PHCS": 819.31, "CIGNA": 879.31 },
+                        "Employee + Spouse": { "PHCS": 1455.41, "CIGNA": 1535.41 },
+                        "Employee + Child(ren)": { "PHCS": 1338.88, "CIGNA": 1418.88 },
+                        "Family": { "PHCS": 2099.09, "CIGNA": 2199.09 }
+                    }
+                },
+                "3500": {
+                    "18-29": {
+                        "Employee": { "PHCS": 622.11, "CIGNA": 682.11 },
+                        "Employee + Spouse": { "PHCS": 1072.86, "CIGNA": 1152.86 },
+                        "Employee + Child(ren)": { "PHCS": 991.03, "CIGNA": 1071.03 },
+                        "Family": { "PHCS": 1531.17, "CIGNA": 1631.17 }
+                    },
+                    "30-44": {
+                        "Employee": { "PHCS": 666.07, "CIGNA": 726.07 },
+                        "Employee + Spouse": { "PHCS": 1189.00, "CIGNA": 1269.00 },
+                        "Employee + Child(ren)": { "PHCS": 1089.00, "CIGNA": 1169.00 },
+                        "Family": { "PHCS": 1627.00, "CIGNA": 1727.00 }
+                    },
+                    "45-54": {
+                        "Employee": { "PHCS": 694.00, "CIGNA": 754.00 },
+                        "Employee + Spouse": { "PHCS": 1211.00, "CIGNA": 1291.00 },
+                        "Employee + Child(ren)": { "PHCS": 1119.00, "CIGNA": 1199.00 },
+                        "Family": { "PHCS": 1689.00, "CIGNA": 1789.00 }
+                    },
+                    "55-64": {
+                        "Employee": { "PHCS": 739.00, "CIGNA": 799.00 },
+                        "Employee + Spouse": { "PHCS": 1289.00, "CIGNA": 1369.00 },
+                        "Employee + Child(ren)": { "PHCS": 1191.00, "CIGNA": 1271.00 },
+                        "Family": { "PHCS": 1824.00, "CIGNA": 1924.00 }
+                    }
+                }
+            },
+            benefits: [
+                { service: "Primary Care Physician", cost: "$25 Copay", notes: "" },
+                { service: "Specialist Office Visit", cost: "$40 Copay", notes: "" },
+                { service: "Urgent Care Visit", cost: "$60 Copay", notes: "" },
+                { service: "Spinal Manipulation/Chiropractic", cost: "$30 Copay", notes: "24 visits per plan year" },
+                { service: "Telemedicine (Through OurLiveDoc ONLY)", cost: "$0 Copay", notes: "Unlimited visits" },
+                { service: "Emergency Services", cost: "20% After Deductible", notes: "" },
+                { service: "Labs", cost: "$25 Copay", notes: "" },
+                { service: "X-rays", cost: "$100 Copay", notes: "" },
+                { service: "Diagnostic Testing/Advanced Imaging", cost: "20% After Deductible", notes: "Precertification Required" },
+                { service: "Outpatient Facility Services", cost: "20% After Deductible", notes: "Precertification Required" },
+                { service: "Outpatient Chemotherapy and Radiotherapy", cost: "20% After Deductible", notes: "30 days per plan year" },
+                { service: "Inpatient Hospital Care Facility", cost: "20% After Deductible", notes: "Precertification Required" },
+                { service: "Inpatient Rehabilitation Facility", cost: "20% After Deductible", notes: "30 days per plan year" },
+                { service: "Alcohol & Substance Abuse Care (Inpatient)", cost: "20% After Deductible", notes: "30 days per plan year" },
+                { service: "Alcohol & Substance Abuse Care (Outpatient)", cost: "20% After Deductible", notes: "30 days per plan year" },
+                { service: "Preventive Care/Screening/Immunization", cost: "$0 Copay, $0 Deductible", notes: "" },
+                { service: "Therapy (Physical, Occupational, Speech)", cost: "$40 Copay", notes: "30 days per plan year" },
+                { service: "Pregnancy/Maternity (Prenatal/Postnatal)", cost: "20% After Deductible", notes: "" },
+                { service: "Home Health Care Visits", cost: "20% After Deductible", notes: "60-visit limit per benefit year" },
+                { service: "Hospice Care", cost: "20% After Deductible", notes: "30 days per benefit year" },
+                { service: "Inpatient Skilled Nursing Facility", cost: "20% After Deductible", notes: "30-day visit limit per benefit year" },
+                { service: "Durable Medical Equipment (DME)", cost: "20% After Deductible", notes: "Precertification required" },
+                { service: "Organ Transplant", cost: "20% After Deductible", notes: "Precertification required" },
+                { service: "Diabetic Nutritional Counseling", cost: "20% After Deductible", notes: "1 visit per plan year" },
+                { service: "Allergy Testing/Injections", cost: "20% After Deductible", notes: "" },
+                { service: "Prescription Drugs (Generic)", cost: "$10 Copay", notes: "30-day supply at retail" },
+                { service: "Prescription Drugs (Preferred Brand Name)", cost: "$90 Copay", notes: "30-day supply at retail" },
+                { service: "Prescription Drugs (Non-Preferred Brand Name)", cost: "$110 Copay", notes: "30-day supply at retail" },
+                { service: "Mail Order (90-day supply) - Generic", cost: "$20 Copay", notes: "" },
+                { service: "Mail Order (90-day supply) - Preferred Brand", cost: "$180 Copay", notes: "" },
+                { service: "Mail Order (90-day supply) - Non-Preferred Brand", cost: "$220 Copay", notes: "" },
+            ]
+        };
+
+        const formSection = document.getElementById('form-section');
+        const resultsSection = document.getElementById('results-section');
+        const quoteForm = document.getElementById('quote-form');
+        const startOverBtn = document.getElementById('start-over-btn');
+
+        quoteForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const age = document.getElementById('age').value;
+            const deductible = document.getElementById('deductible').value;
+            const spouse = document.querySelector('input[name="spouse"]:checked').value;
+            const children = document.querySelector('input[name="children"]:checked').value;
+
+            // Simple validation
+            if (!age || !deductible) {
+                alert('Please select an age group and a deductible.');
+                return;
+            }
+            
+            // Determine plan type
+            let planType = "";
+            if (spouse === "no" && children === "no") {
+                planType = "Employee";
+            } else if (spouse === "yes" && children === "no") {
+                planType = "Employee + Spouse";
+            } else if (spouse === "no" && children === "yes") {
+                planType = "Employee + Child(ren)";
+            } else if (spouse === "yes" && children === "yes") {
+                planType = "Family";
+            }
+
+            // Display user selections
+            document.getElementById('summary-age').textContent = age;
+            document.getElementById('summary-plan-type').textContent = planType;
+            document.getElementById('summary-deductible').textContent = `$${parseInt(deductible).toLocaleString()}`;
+            
+            // Look up and display rates
+            const ratesContainer = document.getElementById('premiums-container');
+            ratesContainer.innerHTML = ''; // Clear previous content
+            
+            const selectedRates = planData.rates[deductible][age][planType];
+            
+            if (selectedRates) {
+                for (const network in selectedRates) {
+                    const rateCard = document.createElement('div');
+                    rateCard.className = 'bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm';
+                    rateCard.innerHTML = `
+                        <p class="text-sm text-gray-500 mb-1">${network} Network</p>
+                        <p class="text-2xl font-bold text-gray-900">$${selectedRates[network].toFixed(2)}</p>
+                        <p class="text-sm text-gray-600">per month</p>
+                    `;
+                    ratesContainer.appendChild(rateCard);
+                }
+            } else {
+                ratesContainer.innerHTML = '<p class="text-red-500">Rates not found for the selected criteria. Please try again.</p>';
+            }
+
+            // Display benefits
+            const benefitsContainer = document.getElementById('benefits-container');
+            benefitsContainer.innerHTML = ''; // Clear previous content
+            
+            planData.benefits.forEach(benefit => {
+                const benefitItem = document.createElement('div');
+                benefitItem.className = 'p-4 border border-gray-200 rounded-lg';
+                benefitItem.innerHTML = `
+                    <p class="font-semibold text-gray-800">${benefit.service}</p>
+                    <p class="text-gray-600 mt-1"><span class="font-medium">Cost:</span> ${benefit.cost}</p>
+                    ${benefit.notes ? `<p class="text-sm text-gray-500 mt-1"><span class="font-medium">Notes:</span> ${benefit.notes}</p>` : ''}
+                `;
+                benefitsContainer.appendChild(benefitItem);
+            });
+
+            // Show results and hide form
+            formSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+        });
+
+        startOverBtn.addEventListener('click', function() {
+            resultsSection.classList.add('hidden');
+            formSection.classList.remove('hidden');
+            quoteForm.reset();
+        });
+    </script>
+</body>
+</html>
